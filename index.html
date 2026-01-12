@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #E9DDFF, #CDBBFF);
+}
+
+.box {
+  width: 320px;
+  margin: 100px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+input, button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>로그인 / 회원가입</h2>
+
+  <input id="email" placeholder="가상 이메일">
+  <input id="password" type="password" placeholder="비밀번호">
+  <input id="name" placeholder="이름 (회원가입용)">
+  <input id="artistCode" placeholder="아티스트 가입번호">
+
+  <button onclick="signup()">회원가입</button>
+  <button onclick="login()">로그인</button>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, getDocs, collection, query, where
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔥 여기에 Firebase 콘솔 값 붙여넣기 */
+const firebaseConfig = {
+  apiKey: "여기에",
+  authDomain: "여기에",
+  projectId: "여기에",
+  appId: "여기에"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore();
+
+const ARTIST_CODE = "gkwlsrla00!";
+
+/* 회원가입 */
+window.signup = async function () {
+  const email = email.value;
+  const password = password.value;
+  const nameValue = name.value;
+  const code = artistCode.value;
+
+  const isArtist = code === ARTIST_CODE;
+
+  if (!isArtist) {
+    const q = query(collection(db, "users"), where("name", "==", nameValue));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      alert("이미 사용 중인 이름입니다.");
+      return;
+    }
+  }
+
+  const user = await createUserWithEmailAndPassword(auth, email, password);
+
+  await setDoc(doc(db, "users", user.user.uid), {
+    name: nameValue,
+    role: isArtist ? "artist" : "fan"
+  });
+
+  location.href = "main.html";
+};
+
+/* 로그인 */
+window.login = async function () {
+  await signInWithEmailAndPassword(auth, email.value, password.value);
+  location.href = "main.html";
+};
+</script>
+
+</body>
+</html>
